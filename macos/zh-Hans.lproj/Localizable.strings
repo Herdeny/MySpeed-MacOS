@@ -1,0 +1,19 @@
+"status.launchFailed" = "启动失败";
+"status.starting" = "正在启动…";
+"status.running" = "服务运行中";
+"status.backendMissing" = "后端缺失";
+"status.stopped" = "服务已停止（%d）";
+"status.startingService" = "正在启动服务…";
+"status.notResponding" = "服务没有响应";
+
+"menu.openDashboard" = "打开控制面板";
+"menu.restartService" = "重新启动服务";
+"menu.openDataDirectory" = "打开数据目录";
+"menu.viewLog" = "查看运行日志";
+"menu.launchAtLogin" = "登录时自动启动";
+"menu.quit" = "退出 MySpeed";
+
+"error.runtimePrepare" = "MySpeed 无法准备运行目录：%@";
+"error.backendMissing" = "应用包内缺少 MySpeedBackend。请重新安装应用。";
+"error.backendLaunch" = "MySpeed 后端启动失败：%@";
+"error.loginItem" = "无法修改登录项：%@";

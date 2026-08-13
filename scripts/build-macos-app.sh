@@ -32,7 +32,7 @@ case "$ARCH" in
 esac
 
 DIST_DIR="$PROJECT_DIR/dist/macos-$ARCH"
-APP_DIR="$DIST_DIR/MySpeed CN.app"
+APP_DIR="$DIST_DIR/MySpeed.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -62,6 +62,7 @@ clang -arch "$NATIVE_ARCH" -fobjc-arc -O2 -mmacosx-version-min=13.0 \
     -framework Cocoa -framework ServiceManagement \
     macos/MySpeedMac/main.m -o "$MACOS_DIR/MySpeed"
 cp macos/Info.plist "$CONTENTS_DIR/Info.plist"
+cp -R macos/en.lproj macos/zh-Hans.lproj "$RESOURCES_DIR/"
 
 download() {
     local url="$1"
@@ -91,31 +92,18 @@ fi
 chmod 755 "$MACOS_DIR/MySpeed" "$MACOS_DIR/MySpeedBackend" "$RESOURCES_DIR/bin/"*
 
 echo "==> Creating application icon"
-ICONSET="$DIST_DIR/AppIcon.iconset"
-mkdir -p "$ICONSET"
 SOURCE_ICON="$PROJECT_DIR/client/public/assets/img/logo.png"
-sips -z 16 16 "$SOURCE_ICON" --out "$ICONSET/icon_16x16.png" >/dev/null
-sips -z 32 32 "$SOURCE_ICON" --out "$ICONSET/icon_16x16@2x.png" >/dev/null
-sips -z 32 32 "$SOURCE_ICON" --out "$ICONSET/icon_32x32.png" >/dev/null
-sips -z 64 64 "$SOURCE_ICON" --out "$ICONSET/icon_32x32@2x.png" >/dev/null
-sips -z 128 128 "$SOURCE_ICON" --out "$ICONSET/icon_128x128.png" >/dev/null
-sips -z 256 256 "$SOURCE_ICON" --out "$ICONSET/icon_128x128@2x.png" >/dev/null
-sips -z 256 256 "$SOURCE_ICON" --out "$ICONSET/icon_256x256.png" >/dev/null
-sips -z 512 512 "$SOURCE_ICON" --out "$ICONSET/icon_256x256@2x.png" >/dev/null
-sips -z 512 512 "$SOURCE_ICON" --out "$ICONSET/icon_512x512.png" >/dev/null
-sips -z 1024 1024 "$SOURCE_ICON" --out "$ICONSET/icon_512x512@2x.png" >/dev/null
-iconutil -c icns "$ICONSET" -o "$RESOURCES_DIR/AppIcon.icns"
-rm -rf "$ICONSET"
+sips -s format icns "$SOURCE_ICON" --out "$RESOURCES_DIR/AppIcon.icns" >/dev/null
 
 echo "==> Signing and packaging"
 codesign --force --deep --sign - "$APP_DIR"
 codesign --verify --deep --strict "$APP_DIR"
 
-DMG_PATH="$PROJECT_DIR/dist/MySpeed-CN-macOS-$ARCH.dmg"
-ZIP_PATH="$PROJECT_DIR/dist/MySpeed-CN-macOS-$ARCH.zip"
+DMG_PATH="$PROJECT_DIR/dist/MySpeed-macOS-$ARCH.dmg"
+ZIP_PATH="$PROJECT_DIR/dist/MySpeed-macOS-$ARCH.zip"
 rm -f "$DMG_PATH" "$ZIP_PATH"
 ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "$ZIP_PATH"
-hdiutil create -volname "MySpeed CN" -srcfolder "$APP_DIR" -ov -format UDZO "$DMG_PATH" >/dev/null
+hdiutil create -volname "MySpeed macOS" -srcfolder "$APP_DIR" -ov -format UDZO "$DMG_PATH" >/dev/null
 
 echo "Built: $APP_DIR"
 echo "Built: $DMG_PATH"

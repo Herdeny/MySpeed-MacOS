@@ -1,6 +1,12 @@
 #import <Cocoa/Cocoa.h>
 #import <ServiceManagement/ServiceManagement.h>
 
+static NSString *const MySpeedProductName = @"MySpeed macOS";
+
+static NSString *L(NSString *key) {
+    return NSLocalizedString(key, nil);
+}
+
 @interface MySpeedAppDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, strong) NSStatusItem *statusItem;
 @property(nonatomic, strong) NSMenuItem *statusMenuItem;
@@ -24,8 +30,8 @@
 
     NSError *error = nil;
     if (![self prepareRuntime:&error]) {
-        [self setStatus:@"启动失败"];
-        [self showError:[NSString stringWithFormat:@"MySpeed 无法准备运行目录：%@", error.localizedDescription]];
+        [self setStatus:L(@"status.launchFailed")];
+        [self showError:[NSString stringWithFormat:L(@"error.runtimePrepare"), error.localizedDescription]];
         return;
     }
     [self probeExistingServer];
@@ -45,25 +51,25 @@
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     self.statusItem.button.image = [NSImage imageWithSystemSymbolName:@"gauge.with.dots.needle.50percent"
                                             accessibilityDescription:@"MySpeed"];
-    self.statusItem.button.toolTip = @"MySpeed CN";
+    self.statusItem.button.toolTip = MySpeedProductName;
 
     NSMenu *menu = [[NSMenu alloc] init];
-    self.statusMenuItem = [[NSMenuItem alloc] initWithTitle:@"正在启动…" action:nil keyEquivalent:@""];
+    self.statusMenuItem = [[NSMenuItem alloc] initWithTitle:L(@"status.starting") action:nil keyEquivalent:@""];
     self.statusMenuItem.enabled = NO;
     [menu addItem:self.statusMenuItem];
     [menu addItem:[NSMenuItem separatorItem]];
-    [menu addItem:[self menuItem:@"打开控制面板" action:@selector(openDashboard:) key:@"o"]];
-    [menu addItem:[self menuItem:@"重新启动服务" action:@selector(restartBackend:) key:@"r"]];
-    [menu addItem:[self menuItem:@"打开数据目录" action:@selector(openDataDirectory:) key:@""]];
-    [menu addItem:[self menuItem:@"查看运行日志" action:@selector(openLog:) key:@""]];
+    [menu addItem:[self menuItem:L(@"menu.openDashboard") action:@selector(openDashboard:) key:@"o"]];
+    [menu addItem:[self menuItem:L(@"menu.restartService") action:@selector(restartBackend:) key:@"r"]];
+    [menu addItem:[self menuItem:L(@"menu.openDataDirectory") action:@selector(openDataDirectory:) key:@""]];
+    [menu addItem:[self menuItem:L(@"menu.viewLog") action:@selector(openLog:) key:@""]];
     [menu addItem:[NSMenuItem separatorItem]];
 
-    self.loginMenuItem = [self menuItem:@"登录时自动启动" action:@selector(toggleLoginItem:) key:@""];
+    self.loginMenuItem = [self menuItem:L(@"menu.launchAtLogin") action:@selector(toggleLoginItem:) key:@""];
     self.loginMenuItem.state = SMAppService.mainAppService.status == SMAppServiceStatusEnabled
         ? NSControlStateValueOn : NSControlStateValueOff;
     [menu addItem:self.loginMenuItem];
     [menu addItem:[NSMenuItem separatorItem]];
-    [menu addItem:[self menuItem:@"退出 MySpeed" action:@selector(quit:) key:@"q"]];
+    [menu addItem:[self menuItem:L(@"menu.quit") action:@selector(quit:) key:@"q"]];
     self.statusItem.menu = menu;
 }
 
@@ -116,7 +122,7 @@
                 if (!self) return;
                 if ([(NSHTTPURLResponse *)response statusCode] == 200) {
                     self.ownsBackend = NO;
-                    [self setStatus:@"服务运行中"];
+                    [self setStatus:L(@"status.running")];
                 } else {
                     [self startBackendAndOpen:YES];
                 }
@@ -129,8 +135,8 @@
     NSURL *backendURL = [[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent]
                          URLByAppendingPathComponent:@"MySpeedBackend"];
     if (![[NSFileManager defaultManager] isExecutableFileAtPath:backendURL.path]) {
-        [self setStatus:@"后端缺失"];
-        [self showError:@"应用包内缺少 MySpeedBackend。请重新安装应用。"];
+        [self setStatus:L(@"status.backendMissing")];
+        [self showError:L(@"error.backendMissing")];
         return;
     }
 
@@ -138,9 +144,14 @@
     task.executableURL = backendURL;
     task.currentDirectoryURL = self.supportDirectory;
     NSMutableDictionary *environment = [[[NSProcessInfo processInfo] environment] mutableCopy];
+    NSString *language = [NSLocale preferredLanguages].firstObject ?: @"en";
+    BOOL usesChineseDefaults = [language.lowercaseString hasPrefix:@"zh"];
     if (!environment[@"SERVER_PORT"]) environment[@"SERVER_PORT"] = @"5216";
-    if (!environment[@"MYSPEED_DEFAULT_PROVIDER"]) environment[@"MYSPEED_DEFAULT_PROVIDER"] = @"libre";
-    if (!environment[@"MYSPEED_DEFAULT_LIBRE_ID"]) environment[@"MYSPEED_DEFAULT_LIBRE_ID"] = @"cn-edu-nju";
+    if (!environment[@"MYSPEED_UI_LANGUAGE"]) environment[@"MYSPEED_UI_LANGUAGE"] = language;
+    if (!environment[@"MYSPEED_DEFAULT_PROVIDER"])
+        environment[@"MYSPEED_DEFAULT_PROVIDER"] = usesChineseDefaults ? @"libre" : @"cloudflare";
+    if (!environment[@"MYSPEED_DEFAULT_LIBRE_ID"])
+        environment[@"MYSPEED_DEFAULT_LIBRE_ID"] = usesChineseDefaults ? @"cn-edu-nju" : @"none";
     if (!environment[@"MYSPEED_SKIP_OOKLA_DOWNLOAD"]) environment[@"MYSPEED_SKIP_OOKLA_DOWNLOAD"] = @"true";
     task.environment = environment;
     task.standardOutput = self.logHandle;
@@ -154,7 +165,7 @@
             self.backend = nil;
             self.ownsBackend = NO;
             if (!self.isQuitting) {
-                [self setStatus:[NSString stringWithFormat:@"服务已停止（%d）", finishedTask.terminationStatus]];
+                [self setStatus:[NSString stringWithFormat:L(@"status.stopped"), finishedTask.terminationStatus]];
             }
         });
     };
@@ -163,11 +174,11 @@
     if ([task launchAndReturnError:&error]) {
         self.backend = task;
         self.ownsBackend = YES;
-        [self setStatus:@"正在启动服务…"];
+        [self setStatus:L(@"status.startingService")];
         [self beginHealthChecksAndOpen:openWhenReady];
     } else {
-        [self setStatus:@"启动失败"];
-        [self showError:[NSString stringWithFormat:@"MySpeed 后端启动失败：%@", error.localizedDescription]];
+        [self setStatus:L(@"status.launchFailed")];
+        [self showError:[NSString stringWithFormat:L(@"error.backendLaunch"), error.localizedDescription]];
     }
 }
 
@@ -185,11 +196,11 @@
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([(NSHTTPURLResponse *)response statusCode] == 200) {
                         [timer invalidate];
-                        [self setStatus:@"服务运行中"];
+                        [self setStatus:L(@"status.running")];
                         if (openWhenReady) [self openDashboard:nil];
                     } else if (self.healthAttempts >= 30) {
                         [timer invalidate];
-                        [self setStatus:@"服务没有响应"];
+                        [self setStatus:L(@"status.notResponding")];
                     }
                 });
             }] resume];
@@ -198,13 +209,13 @@
 
 - (void)setStatus:(NSString *)text {
     self.statusMenuItem.title = text;
-    self.statusItem.button.toolTip = [NSString stringWithFormat:@"MySpeed CN · %@", text];
+    self.statusItem.button.toolTip = [NSString stringWithFormat:@"%@ · %@", MySpeedProductName, text];
 }
 
 - (void)showError:(NSString *)message {
     NSAlert *alert = [[NSAlert alloc] init];
     alert.alertStyle = NSAlertStyleCritical;
-    alert.messageText = @"MySpeed CN";
+    alert.messageText = MySpeedProductName;
     alert.informativeText = message;
     [alert runModal];
 }
@@ -241,7 +252,7 @@
         ? [service unregisterAndReturnError:&error]
         : [service registerAndReturnError:&error];
     if (!success) {
-        [self showError:[NSString stringWithFormat:@"无法修改登录项：%@", error.localizedDescription]];
+        [self showError:[NSString stringWithFormat:L(@"error.loginItem"), error.localizedDescription]];
     }
     self.loginMenuItem.state = service.status == SMAppServiceStatusEnabled
         ? NSControlStateValueOn : NSControlStateValueOff;

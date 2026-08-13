@@ -168,7 +168,7 @@ jobs:
         run: bash scripts/build-macos-app.sh ${{ matrix.arch }}
 
       - name: Copy standalone backend
-        run: cp "dist/macos-${{ matrix.arch }}/MySpeed CN.app/Contents/MacOS/MySpeedBackend" "${{ matrix.artifact_name }}"
+        run: cp "dist/macos-${{ matrix.arch }}/MySpeed.app/Contents/MacOS/MySpeedBackend" "${{ matrix.artifact_name }}"
 
       - name: Upload to Release
         uses: actions/github-script@v7
@@ -189,8 +189,8 @@ jobs:
           script: |
             const fs = require('fs');
             const assets = [
-              `MySpeed-CN-macOS-${{ matrix.arch }}.dmg`,
-              `MySpeed-CN-macOS-${{ matrix.arch }}.zip`
+              `MySpeed-macOS-${{ matrix.arch }}.dmg`,
+              `MySpeed-macOS-${{ matrix.arch }}.zip`
             ];
             for (const name of assets) {
               await github.rest.repos.uploadReleaseAsset({

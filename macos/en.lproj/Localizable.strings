@@ -1,0 +1,19 @@
+"status.launchFailed" = "Failed to start";
+"status.starting" = "Starting…";
+"status.running" = "Service is running";
+"status.backendMissing" = "Backend is missing";
+"status.stopped" = "Service stopped (%d)";
+"status.startingService" = "Starting service…";
+"status.notResponding" = "Service is not responding";
+
+"menu.openDashboard" = "Open Dashboard";
+"menu.restartService" = "Restart Service";
+"menu.openDataDirectory" = "Open Data Directory";
+"menu.viewLog" = "View Runtime Log";
+"menu.launchAtLogin" = "Launch at Login";
+"menu.quit" = "Quit MySpeed";
+
+"error.runtimePrepare" = "MySpeed could not prepare its runtime directory: %@";
+"error.backendMissing" = "MySpeedBackend is missing from the application bundle. Please reinstall the application.";
+"error.backendLaunch" = "The MySpeed backend failed to start: %@";
+"error.loginItem" = "The login item could not be updated: %@";
