@@ -5,54 +5,64 @@ import * as config from '../controller/config.js';
 export let interfaces = {};
 
 export const requestInterfaces = async () => {
-    let interfacesNode = os.networkInterfaces();
-    let interfacesResult = {};
-
+    const interfacesNode = os.networkInterfaces();
+    const candidates = [];
     console.log("Looking for network interfaces...");
-    for (let i in interfacesNode) {
-        for (let j in interfacesNode[i]) {
-            let address = interfacesNode[i][j];
-
-            if (address.internal) continue;
-
-            let options = {hostname: "speed.cloudflare.com", path: "/__down?bytes=1", method: "GET",
-                family: address.family === "IPv4" ? 4 : 6, timeout: 5000};
-
-            options.agent = new https.Agent(options);
-            options.localAddress = address.address;
-
-            await new Promise((resolve) => {
-
-                const req = https.request(options, () => {
-                    if (!interfacesResult[i]) interfacesResult[i] = [];
-                    interfacesResult[i].push(address.address);
-                    req.destroy();
-                    resolve();
-                });
-
-                req.on('error', () => resolve());
-                req.on('timeout', () => req.destroy());
-
-                req.end();
-            });
+    for (const [name, addresses] of Object.entries(interfacesNode)) {
+        for (const address of addresses ?? []) {
+            const isLinkLocalV6 = address.family === "IPv6" && address.address.toLowerCase().startsWith("fe80:");
+            if (!address.internal && !isLinkLocalV6) candidates.push({name, address});
         }
-
-        if (!interfacesResult[i]) delete interfacesResult[i];
     }
 
-    for (let i in interfacesResult) {
-        for (let j in interfacesResult[i]) {
-            if (interfacesResult[i][j].includes(".")) {
-                interfaces[i] = interfacesResult[i][j];
-                break;
-            }
-        }
+    const probes = await Promise.all(candidates.map(({name, address}) => new Promise((resolve) => {
+        const options = {
+            hostname: "speed.cloudflare.com",
+            path: "/__down?bytes=1",
+            method: "GET",
+            family: address.family === "IPv4" ? 4 : 6,
+            timeout: 3000,
+            localAddress: address.address
+        };
+        options.agent = new https.Agent(options);
 
-        if (!interfaces[i]) interfaces[i] = interfacesResult[i][0];
+        let settled = false;
+        const finish = (reachable) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(hardTimeout);
+            resolve({name, address, reachable});
+        };
+        const req = https.request(options, () => {
+            finish(true);
+            req.destroy();
+        });
+        const hardTimeout = setTimeout(() => {
+            finish(false);
+            req.destroy();
+        }, 3500);
+        req.on('error', () => finish(false));
+        req.on('timeout', () => {
+            finish(false);
+            req.destroy();
+        });
+        req.end();
+    })));
+
+    let usable = probes.filter(candidate => candidate.reachable);
+    if (usable.length === 0 && candidates.length > 0) {
+        usable = candidates.map(candidate => ({...candidate, reachable: false}));
+        console.warn("Interface reachability probe failed; falling back to local active interfaces.");
     }
 
-    for (let i in interfaces) {
-        console.log(`Found interface ${i} with IP ${interfaces[i]}`);
+    const nextInterfaces = {};
+    for (const {name, address} of usable) {
+        if (!nextInterfaces[name] || address.family === "IPv4") nextInterfaces[name] = address.address;
+    }
+    interfaces = nextInterfaces;
+
+    for (const [name, address] of Object.entries(interfaces)) {
+        console.log(`Found interface ${name} with IP ${address}`);
     }
 
     const currentInterface = await config.getValue("interface");
@@ -63,6 +73,7 @@ export const requestInterfaces = async () => {
         } else {
             console.warn(`Interface ${currentInterface} not found. Falling back to default.`);
         }
-        await config.updateValue("interface", Object.keys(interfaces)[0]);
+        const fallback = Object.keys(interfaces)[0];
+        if (fallback) await config.updateValue("interface", fallback);
     }
 };

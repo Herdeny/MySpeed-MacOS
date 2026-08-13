@@ -13,7 +13,10 @@ const downloadPath = `https://install.speedtest.net/app/cli/ookla-speedtest-${oo
 export const fileExists = async () => fs.existsSync(binaryPath);
 
 export const downloadFile = async () => {
-    const binary = ooklaList.find(b => b.os === process.platform && b.arch === process.arch);
+    let binary = ooklaList.find(b => b.os === process.platform && b.arch === process.arch);
+    // Ookla only publishes an Intel macOS CLI. Apple Silicon can run it via Rosetta.
+    if (!binary && process.platform === 'darwin' && process.arch === 'arm64')
+        binary = ooklaList.find(b => b.os === 'darwin' && b.arch === 'x64');
     if (!binary)
         throw new Error(`Your platform (${process.platform}-${process.arch}) is not supported by the Speedtest CLI`);
 

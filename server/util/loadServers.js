@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { getJson } from './http.js';
+import { LIBRE_CN_SERVERS, OOKLA_CN_SERVERS } from '../config/cnServers.js';
 
 const sources = [
     {
@@ -39,8 +40,14 @@ for (const {file, url, format, isCurrent} of sources) {
 
     getJson(url)
         .then((data) => {
-            const servers = Object.fromEntries((data ?? []).map((row) => [row.id, format(row)]));
+            let servers = Object.fromEntries((data ?? []).map((row) => [row.id, format(row)]));
+            if (file.includes("ookla")) servers = {...servers, ...OOKLA_CN_SERVERS};
+            if (file.includes("librespeed")) servers = {...servers, ...LIBRE_CN_SERVERS};
             fs.writeFileSync(file, JSON.stringify(servers, null, 4));
         })
-        .catch(() => console.error("Could not load servers"));
+        .catch(() => {
+            const bundled = file.includes("ookla") ? OOKLA_CN_SERVERS : LIBRE_CN_SERVERS;
+            if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(bundled, null, 4));
+            console.error("Could not load public servers; bundled China nodes remain available.");
+        });
 }

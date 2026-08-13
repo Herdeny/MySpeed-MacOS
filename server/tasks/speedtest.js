@@ -63,11 +63,11 @@ export const run = async (retryAuto = false) => {
 
     if (mode === "libre" && speedtest.server && !serverUrl) {
         let serverEntry = Object.entries(serverController.getLibreServers())
-            .filter(([, value]) => value === speedtest.server.name)[0];
+            .find(([, value]) => (typeof value === "string" ? value : value?.name) === speedtest.server.name);
 
         if (serverEntry) {
             if (serverId === undefined) await config.updateValue("libreId", serverEntry[0]);
-            serverId = parseInt(serverEntry[0]);
+            serverId = serverEntry[0];
         }
     }
 

@@ -28,8 +28,8 @@ export const downloadToFile = (url, destPath) => new Promise((resolve, reject) =
     }).on('error', reject);
 });
 
-export const extractBinary = (archivePath, outputDir, binaryRegex, outputName) =>
-    decompress(archivePath, outputDir, {
+export const extractBinary = async (archivePath, outputDir, binaryRegex, outputName) => {
+    await decompress(archivePath, outputDir, {
         plugins: [decompressTarGz(), decompressUnzip()],
         filter: file => binaryRegex.test(file.path),
         map: file => {
@@ -37,3 +37,5 @@ export const extractBinary = (archivePath, outputDir, binaryRegex, outputName) =
             return file;
         }
     });
+    if (process.platform !== 'win32') fs.chmodSync(path.join(outputDir, outputName), 0o755);
+};

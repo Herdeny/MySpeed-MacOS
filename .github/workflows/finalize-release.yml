@@ -80,7 +80,7 @@ jobs:
             body += `| :-- | :-- | :-- |\n`;
             body += `| **Windows** | ${L('EXE', 'MySpeed-windows-x64.exe')} · ${L('MSI', 'MySpeed-installer.msi')} | |\n`;
             body += `| **Linux** | ${L('Binary', 'MySpeed-linux-x64')} | ${L('Binary', 'MySpeed-linux-arm64')} |\n`;
-            body += `| **macOS** | ${L('Binary', 'MySpeed-macos-x64')} | ${L('Binary', 'MySpeed-macos-arm64')} |\n`;
+            body += `| **macOS** | ${L('DMG', 'MySpeed-CN-macOS-x64.dmg')} · ${L('ZIP', 'MySpeed-CN-macOS-x64.zip')} · ${L('Binary', 'MySpeed-macos-x64')} | ${L('DMG', 'MySpeed-CN-macOS-arm64.dmg')} · ${L('ZIP', 'MySpeed-CN-macOS-arm64.zip')} · ${L('Binary', 'MySpeed-macos-arm64')} |\n`;
             body += `\n### Source Distribution\n`;
             body += `- ${L('ZIP Archive', 'MySpeed.zip')} (requires Bun runtime)\n`;
             body += `\n### Docker Images\n`;

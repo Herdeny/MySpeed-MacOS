@@ -164,34 +164,11 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install client dependencies
-        working-directory: client
-        run: bun install
+      - name: Build macOS application
+        run: bash scripts/build-macos-app.sh ${{ matrix.arch }}
 
-      - name: Build client
-        working-directory: client
-        run: bun run build
-
-      - name: Move build folder
-        run: mv client/build .
-
-      - name: Install server dependencies
-        run: bun install
-
-      - name: Generate migrations
-        run: bun run generate-migrations
-
-      - name: Generate integrations
-        run: bun run generate-integrations
-
-      - name: Generate client embed
-        run: bun run generate-client-embed
-
-      - name: Compile binary
-        run: bun build --compile --compile-autoload-package-json --external pg-hstore --external pg --target=${{ matrix.target }} server/index.js --outfile MySpeed
-
-      - name: Rename binary
-        run: mv MySpeed ${{ matrix.artifact_name }}
+      - name: Copy standalone backend
+        run: cp "dist/macos-${{ matrix.arch }}/MySpeed CN.app/Contents/MacOS/MySpeedBackend" "${{ matrix.artifact_name }}"
 
       - name: Upload to Release
         uses: actions/github-script@v7
@@ -205,6 +182,25 @@ jobs:
               name: '${{ matrix.artifact_name }}',
               data: fs.readFileSync('${{ matrix.artifact_name }}')
             });
+
+      - name: Upload application packages to Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const assets = [
+              `MySpeed-CN-macOS-${{ matrix.arch }}.dmg`,
+              `MySpeed-CN-macOS-${{ matrix.arch }}.zip`
+            ];
+            for (const name of assets) {
+              await github.rest.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: ${{ inputs.release_id }},
+                name,
+                data: fs.readFileSync(`dist/${name}`)
+              });
+            }
 
   build-zip:
     name: "Source ZIP"

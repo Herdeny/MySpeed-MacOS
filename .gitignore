@@ -18,6 +18,7 @@
 /bin
 /MySpeed
 /MySpeed.exe
+/dist
 
 # docs
 /docs/.vitepress/dist

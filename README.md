@@ -1,88 +1,67 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![Release][release-shield]][release-url]
+[![macOS](https://img.shields.io/badge/macOS-13%2B-111111?logo=apple)](MACOS.md)
+[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-native-0a84ff)](MACOS.md)
+[![Intel](https://img.shields.io/badge/Intel-supported-0a84ff)](MACOS.md)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-<br />
 <div align="center">
-  <a href="https://github.com/gnmyt/myspeed">
-    <img src="https://i.imgur.com/aCmA6rH.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/Herdeny/myspeed-macos-cn">
+    <img src="https://i.imgur.com/aCmA6rH.png" alt="MySpeed Logo" width="80" height="80">
   </a>
-  <h3>MySpeed <a href="README.de.md">🇩🇪</a> <a href="README.md">🇺🇸</a></h3>
+  <h2>MySpeed CN for macOS</h2>
+  <p>原生菜单栏网络质量监测工具 · 无需 Docker · 内置中国测速节点</p>
 </div>
 
+这是基于 [MySpeed](https://github.com/gnmyt/myspeed) 开发的非官方 macOS 版本，针对 Apple Silicon 和 Intel Mac 提供可直接安装的应用，并采用 [MySpeed-CN](https://github.com/macrwfuse/myspeed-cn) 的中国测速提供商配置。
 
-## 🤔 What is MySpeed?
+## 主要功能
 
-MySpeed is a speed test analysis software that records your internet speed over a fully configurable retention period.
+- 原生 macOS 菜单栏应用，不占用 Dock，无需 Docker。
+- 自动定时测速并记录下载、上传、延迟和抖动。
+- 支持 LibreSpeed、Cloudflare 和 Ookla 三类测速提供商。
+- 内置中国大陆教育网及运营商节点；首次启动默认使用南京大学 LibreSpeed 节点。
+- 测速历史保存在 `~/Library/Application Support/MySpeed`，升级应用不会覆盖数据。
+- 支持开机自动启动、服务重启、日志查看和浏览器控制面板。
 
-### ⭐ Features
+## 下载安装
 
-- 📊 MySpeed generates clear statistics on speed, ping, and more
-- ⏰ MySpeed automates speed tests and allows you to set the time between tests using Cron expressions
-- 🗄️ Add multiple servers directly to a MySpeed instance
-- 🩺 Configure health checks to notify you via email, Signal, WhatsApp, or Telegram in case of errors or downtime
-- 📆 Test results can be stored for any retention period you configure - from a few days to forever
-- 🔥 Support for Prometheus and Grafana
-- 🗳️ Choose between Ookla, LibreSpeed and Cloudflare speed test servers
-- 💁 Learn more about MySpeed on our [website](https://myspeed.dev)
+前往 [Releases](https://github.com/Herdeny/myspeed-macos-cn/releases) 下载与你的 Mac 匹配的安装包：
 
-### ⬇️ Installation
+- Apple M1、M2、M3、M4、M5：`MySpeed-CN-macOS-arm64.dmg`
+- Intel Mac：`MySpeed-CN-macOS-x64.dmg`
 
-- **🐧 Guide for [Linux](https://docs.myspeed.dev/setup/linux)**
-- **🪟 Guide for [Windows](https://docs.myspeed.dev/setup/windows)**
+打开 DMG 后，把 `MySpeed CN.app` 拖入“应用程序”即可。首次运行的安全提示、数据目录和卸载方法请查看 [macOS 使用与构建说明](MACOS.md)。
 
-### 📸 Example Screenshots
+> 当前公开包使用临时签名，尚未经过 Apple 公证。若 macOS 阻止首次启动，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
 
-#### Homepage (List View)
+## 从源码构建
 
-<img src="https://i.imgur.com/NHX7Ba9.png" alt="Homepage">
+需要 macOS 13 或更高版本、Xcode Command Line Tools 和 [Bun](https://bun.sh/)：
 
-#### Homepage (Statistics View)
-<img src="https://i.imgur.com/5JAFgrk.png" alt="Statistics">
+```sh
+git clone https://github.com/Herdeny/myspeed-macos-cn.git
+cd myspeed-macos-cn
+bun run build:macos
+```
 
-#### Server Selection
+也可以指定目标架构：
 
-<img src="https://i.imgur.com/hgOR93G.png" alt="Server Selection">
+```sh
+bash scripts/build-macos-app.sh arm64
+bash scripts/build-macos-app.sh x64
+```
 
-#### Dropdown Menu
+生成的 DMG、ZIP 和 `.app` 位于 `dist/`。GitHub Actions 也会分别构建 Apple Silicon 与 Intel 安装包。
 
-<img src="https://i.imgur.com/alKEMrg.png" alt="Dropdown Menu">
+## 已知限制
 
-#### Page During a Speed Test
+- Ookla 官方 macOS CLI 目前仅提供 Intel 版本；Apple Silicon 上使用 Ookla 需要 Rosetta 2。
+- 部分中国大陆网络无法访问 Ookla 官方下载域名。此时构建仍会完成，LibreSpeed 与 Cloudflare 不受影响。
+- 内置公共测速节点可能因维护、限流或网络策略暂时不可用，可以在控制面板中切换节点。
 
-<img src="https://i.imgur.com/kxsrjIe.png" alt="Page During a Speed Test">
+## 上游与致谢
 
-## Convinced?
+本项目保留 MySpeed 的提交历史和 MIT 许可证。国内测速节点及相关兼容逻辑参考自 MySpeed-CN。完整来源和第三方组件信息见 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md)。本项目与 MySpeed、LibreSpeed、Cloudflare 或 Ookla 官方均无隶属关系。
 
-Great, let's get started! You can find the installation instructions for Linux (and Windows) at the top under Installation.
+## 许可证
 
-## License
-
-Distributed under the MIT license. See `LICENSE` for more information.
-
-[contributors-shield]: https://img.shields.io/github/contributors/gnmyt/myspeed.svg?style=for-the-badge
-
-[contributors-url]: https://github.com/gnmyt/myspeed/graphs/contributors
-
-[forks-shield]: https://img.shields.io/github/forks/gnmyt/myspeed.svg?style=for-the-badge
-
-[forks-url]: https://github.com/gnmyt/myspeed/network/members
-
-[stars-shield]: https://img.shields.io/github/stars/gnmyt/myspeed.svg?style=for-the-badge
-
-[stars-url]: https://github.com/gnmyt/myspeed/stargazers
-
-[issues-shield]: https://img.shields.io/github/issues/gnmyt/myspeed.svg?style=for-the-badge
-
-[issues-url]: https://github.com/gnmyt/myspeed/issues
-
-[license-shield]: https://img.shields.io/github/license/gnmyt/myspeed.svg?style=for-the-badge
-
-[license-url]: https://github.com/gnmyt/myspeed/blob/master/LICENSE
-
-[release-shield]: https://img.shields.io/github/v/release/gnmyt/myspeed.svg?style=for-the-badge
-
-[release-url]: https://github.com/gnmyt/myspeed/releases/latest
+本项目依据 [MIT License](LICENSE) 开源。MySpeed 原始版权归 Mathias Wagner 及其贡献者所有；各测速组件遵循其各自许可证和服务条款。

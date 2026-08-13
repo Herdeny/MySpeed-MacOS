@@ -9,6 +9,10 @@ export default async (mode, serverId, serverUrl) => {
         : mode === "libre" ? './bin/librespeed-cli' + (process.platform === "win32" ? ".exe" : "")
             : './bin/cfspeedtest' + (process.platform === "win32" ? ".exe" : "");
 
+    if (!fs.existsSync(binaryPath)) {
+        throw new Error(`Speed test provider is missing: ${binaryPath}`);
+    }
+
     if (!interfacesModule.interfaces) throw new Error("No interfaces found");
 
     const currentInterface = await config.getValue("interface");
@@ -28,7 +32,12 @@ export default async (mode, serverId, serverUrl) => {
 
         if (serverId) args.push(`--server-id=${serverId}`);
     } else if (mode === "libre") {
-        args = ['--json', '--duration=5', '--source=' + interfaceIp];
+        args = ['--json', '--duration=5'];
+        // librespeed-cli's source-address binding is unreliable on macOS and can
+        // reject an otherwise reachable server. Let the macOS route table select
+        // the interface; explicit binding remains available on other platforms.
+        if (process.platform === "darwin") args.push('--no-icmp');
+        else args.push('--source=' + interfaceIp);
         if (serverUrl) {
             const customServerConfig = [{
                 id: 1,
@@ -44,7 +53,26 @@ export default async (mode, serverId, serverUrl) => {
             args.push(`--local-json=${tempJsonPath}`);
             args.push('--server=1');
         } else if (serverId) {
-            args.push(`--server=${serverId}`);
+            if (/[^0-9]/.test(String(serverId))) {
+                const {getLibreServers} = await import('../controller/servers.js');
+                const selected = getLibreServers()[serverId];
+                if (!selected || typeof selected !== "object") {
+                    throw new Error(`Unknown LibreSpeed server: ${serverId}`);
+                }
+                const tempJsonPath = path.join('data', 'servers', 'libre_selected.json');
+                fs.writeFileSync(tempJsonPath, JSON.stringify([{
+                    id: 1,
+                    name: selected.name || String(serverId),
+                    server: selected.server,
+                    dlURL: selected.dlURL || "garbage.php",
+                    ulURL: selected.ulURL || "empty.php",
+                    pingURL: selected.pingURL || "empty.php",
+                    getIpURL: selected.getIpURL || "getIP.php"
+                }]));
+                args.push(`--local-json=${tempJsonPath}`, '--server=1');
+            } else {
+                args.push(`--server=${serverId}`);
+            }
         }
     } else if (mode === "cloudflare") {
         args = ['--output-format=json'];

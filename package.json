@@ -11,6 +11,7 @@
     "server": "bun run --watch server/index.js",
     "build": "bun run generate-migrations && bun run generate-integrations && cd client && bun run build",
     "build:binary": "bun run build && mv client/build . && bun run generate-client-embed && bun build --compile --compile-autoload-package-json --external pg-hstore --external pg server/index.js --outfile MySpeed",
+    "build:macos": "bash scripts/build-macos-app.sh",
     "generate-client-embed": "bun run scripts/generate-client-embed.js",
     "generate-migrations": "bun run scripts/generate-migrations.js",
     "generate-integrations": "bun run scripts/generate-integrations.js",

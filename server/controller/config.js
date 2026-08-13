@@ -18,9 +18,9 @@ const configDefaults = {
     upload: "50",
     cron: "0 * * * *",
     scheduleOffset: "true",
-    provider: "none",
-    ooklaId: "none",
-    libreId: "none",
+    provider: process.env.MYSPEED_DEFAULT_PROVIDER || "none",
+    ooklaId: process.env.MYSPEED_DEFAULT_OOKLA_ID || "none",
+    libreId: process.env.MYSPEED_DEFAULT_LIBRE_ID || "none",
     libreUrl: "none",
     password: "none",
     passwordLevel: "none",
@@ -91,7 +91,7 @@ export const validateInput = async (key, value) => {
     if ((key === "ping" || key === "download" || key === "upload") && /[^0-9.]/.test(value))
         return "You need to provide a number in order to change this";
 
-    if ((key === "ooklaId" || key === "libreId") && (/[^0-9]/.test(value) && value !== "none"))
+    if (key === "ooklaId" && (/[^0-9]/.test(value) && value !== "none"))
         return "You need to provide a number in order to change this";
 
     if (key === "libreUrl" && value !== "none") {
