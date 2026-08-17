@@ -55,9 +55,10 @@ bash scripts/build-macos-app.sh x64
 
 The application, DMG, and ZIP are written to `dist/`. GitHub Actions can build both architectures as well.
 
-## Upgrading from MySpeed CN for macOS
+## Pictures
+<img width="2924" height="2447" alt="becc0745aff37448ea9d4640dacc6f8d" src="https://github.com/user-attachments/assets/60493b31-4000-4790-bb1b-6a052b01152e" />
 
-Quit and remove the old `MySpeed CN.app`, then install `MySpeed.app`. Existing test history remains available because both versions use `~/Library/Application Support/MySpeed`. Re-enable Launch at Login from the new application's menu if you previously enabled it.
+
 
 ## Known limitations
 
